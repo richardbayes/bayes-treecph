@@ -157,6 +157,14 @@ classdef Nodes
                         tau_start,l_start,thetree.nugget,thetree.EB);
                 end
             end
+            % Compute the true marginal of y after integrating out
+            % length and scale parameters
+            
+            % This sigma is the one from the Rue paper, not
+            %   the covariance matrix
+            % Sigma = -get_hess_numeric_treesurv(ypart,out,thetree);
+            
+            
             out.tau = res.tau;
             out.l = res.l;
             out.Llike = marg_y;
