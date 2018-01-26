@@ -27,7 +27,7 @@ function [fullmarg,ZZ] = get_fullmarginal(Ystd,thenode,thetree,delta_z,delta_pi)
     %Lambda
     %V
     %Lambda
-    V_sqrtLambda = V * sqrt(Lambda);
+    V_sqrtLambda = V * sqrt(Lambda)
     
     %theHess
     
@@ -40,18 +40,22 @@ function [fullmarg,ZZ] = get_fullmarginal(Ystd,thenode,thetree,delta_z,delta_pi)
     
     done = 0;
     ii = 1;
-    cntr = 1;
+    cntr = 2;
     nz = 100;
     ZZ = zeros(nz,3); % first two columns are tau and l, last column is the posterior value
+    % Put in the MAP estimate
+    ZZ(1,:) = [0,0,thenode.Llike];
+    
+    
     % Do this in the positive direction of tau;
     while ~done
         z = ii*delta_z;
-        theta_z1 = get_thetaz(tau0,l0,z,0,V_sqrtLambda);
+        theta_z1 = get_thetaz(tau0,l0,z,0,V_sqrtLambda)
         %theta_z1 = [tau0; l0] + V_sqrtLambda * [ii*delta_z; 0];
         if any(theta_z1 <= 0)
             break;
         end
-        m1 = get_marginal(Ynode,K,s,eps,theta_z1(1),theta_z1(2),nugget,EB);
+        m1 = get_marginal(Ynode,K,s,eps,theta_z1(1),theta_z1(2),nugget,EB)
         ZZ(cntr,:) = [z, 0, m1];
         ii = ii + 1;
         cntr = cntr + 1;
@@ -133,13 +137,13 @@ function [fullmarg,ZZ] = get_fullmarginal(Ystd,thenode,thetree,delta_z,delta_pi)
             m1 = get_marginal(Ynode,K,s,eps,theta_z1(1),theta_z1(2),nugget,EB);
             ZZ(cntr,:) = [ii,z,m1];
             cntr = cntr + 1;
-            if (MAP - m1) > delta_pi
-                break;
-            end
+%             if (MAP - m1) > delta_pi
+%                 break;
+%             end
         end
         % for a given tau, do negative l values
-        for jj=(-1):minlim(2)
-            z = -jj*delta_z;
+        for jj=-(1:abs(minlim(2)))
+            z = jj*delta_z;
             theta_z1 = get_thetaz(tau0,l0,ii,z,V_sqrtLambda);
             if any(theta_z1 <= 0)
                 break;
@@ -147,23 +151,27 @@ function [fullmarg,ZZ] = get_fullmarginal(Ystd,thenode,thetree,delta_z,delta_pi)
             m1 = get_marginal(Ynode,K,s,eps,theta_z1(1),theta_z1(2),nugget,EB);
             ZZ(cntr,:) = [ii,z,m1];
             cntr = cntr + 1;
-            if (MAP - m1) > delta_pi
-                break;
-            end
+%             if (MAP - m1) > delta_pi
+%                 break;
+%             end
         end
     end
-
+    
     % shrink ZZ if necessary (if overallocated)
     if size(ZZ,1) > (cntr-1)
-        ZZ = ZZ(cntr-1,:);
+        ZZ = ZZ(1:(cntr-1),:);
     end
     
-    ZZ
-       
-    interp_func = scatteredInterpolant(ZZ(:,1),ZZ(:,2),exp(ZZ(:,3)));
+    %ZZ = sortrows(ZZ,[1,2]);
+    %ZZ
+     
+    fullmarg=[];
+    
+    %interp2(
+    %interp_func = scatteredInterpolant(ZZ(:,1),ZZ(:,2),exp(ZZ(:,3)));
     % Now create an interpolation function and integrate.
-    myinterp = @(z1,z2) interp_func(z1,z2); %z1 is z for tau, z2 is tau for l;
-    fullmarg = integral2(myinterp,minlim(1),maxlim(1),minlim(2),maxlim(2));
+    %myinterp = @(z1,z2) interp_func(z1,z2); %z1 is z for tau, z2 is tau for l;
+    %fullmarg = integral2(myinterp,minlim(1),maxlim(1),minlim(2),maxlim(2));
 end
 
 
